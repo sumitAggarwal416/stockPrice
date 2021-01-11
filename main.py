@@ -39,12 +39,11 @@ data = df.filter(['Close'])
 #convert the df to a numpy array
 dataset = data.values
 #get the number of rows to train the model on
-training_data_len = math.ceil(len(dataset) * 0.8) # 80%data set training
+training_data_len = math.ceil(len(dataset) * 0.8) # 80% dataset training
 
 #scale the data to preprocessing transformations to do the normalization before inputing the data to the model
-scaler = MinMaxScaler(feature_range=(0,1)) #
-scaled_data = scaler.fit_transform(dataset) #basically computes the minimum and max values that will be used for
-# scaling and then transforms the data based on the two values - 0 and 1 (inclusive)
+scaler = MinMaxScaler(feature_range=(0,1)) 
+scaled_data = scaler.fit_transform(dataset)
 
 #create the training dataset
 #create the scaled training dataset
@@ -53,13 +52,11 @@ train_data = scaled_data[0:training_data_len, :]
 x_train = [] #training features
 y_train = [] #target variables
 
-#it will give a dataset in for x after each pass through/epoch which will be associated with a y value which we want
-#our model to predict at the same index value but in y_train instead
-#the last value in the second epoch will be equal to the first value of the y_train's first epoch
+
 for i in range(60, len(train_data)):
     #append the past 60 values to the x_train dataset
     x_train.append(train_data[i - 60: i, 0]) # 0-59
-    y_train.append(train_data[i, 0]) # 61st value  that we want our model to predict
+    y_train.append(train_data[i, 0]) 
     if i <= 60:
         print(x_train)
         print(y_train)
@@ -70,16 +67,14 @@ for i in range(60, len(train_data)):
 x_train, y_train = np.array(x_train), np.array(y_train)
 
 #reshape the data
-# because the LSTM model expects the input to be 3-dimensional in form of number of samples, number of time steps/
-#epochs and number of features
-x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1)) # 1543,60,1
+# because the LSTM model expects the input to be 3-dimensional in form of number of samples, number of time steps
+# and number of features
+x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1)) 
 
 #build the LSTM model architecture
 model = Sequential()
 #add a layer to the model
-model.add(LSTM(50, return_sequences = True, input_shape=(x_train.shape[1],1))) #will have 50 neurons
-#return sequences is true because we need to add another lstm layer and since it is the very first layer, we will
-#give it an input shape
+model.add(LSTM(50, return_sequences = True, input_shape=(x_train.shape[1],1)))
 
 model.add(LSTM(50, return_sequences=False))
 model.add(Dense(25))
@@ -90,25 +85,24 @@ model.compile(optimizer='adam', loss='mean_squared_error') #optimizer is used to
 #the loss function is used to measure how well the model did on training
 
 #train the model
-model.fit(x_train, y_train, batch_size=1, epochs=1) #epochs is the number of iterations in which the whole data will
-#be processed
+model.fit(x_train, y_train, batch_size=1, epochs=1) 
 
 #create the testing dataset
-#create a new array containing scaled values from 1543 - 2003
+#create a new array containing scaled values 
 test_data = scaled_data[training_data_len - 60: , :]
 #create the datasets x_test and y_test
 x_test = []
-y_test = dataset[training_data_len:, :] #all of the values that we want our model to predict
+y_test = dataset[training_data_len:, :] 
 for i in range(60, len(test_data)):
-    x_test.append(test_data[i-60:i,0]) #contains the past 60 values
+    x_test.append(test_data[i-60:i,0]) 
 
 #convert the data into numpy array
 x_test = np.array(x_test)
 x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
 
 #get the model's predicted price values
-predictions = model.predict(x_test) #we want it to be the exact same values as y_test
-predictions = scaler.inverse_transform(predictions) #unscaling the values so that it has the same values as y_test dataset
+predictions = model.predict(x_test) 
+predictions = scaler.inverse_transform(predictions) 
 
 #evaluate our model using the root mean squared error could also use cross entropy loss but look into that before using
 rmse = np.sqrt(np.mean((predictions - y_test) ** 2))
